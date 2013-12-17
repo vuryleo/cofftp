@@ -4,7 +4,6 @@
     "private": true,
     "dependencies": {
       "continuation" : "0.1.3",
-      "coffee-script" : "",
-      "socket.io" : ""
+      "coffee-script" : ""
     }
 }

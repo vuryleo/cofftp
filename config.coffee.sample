@@ -1,0 +1,5 @@
+module.exports =
+  host: 'ftp.net9.org'
+  port: 21
+  username: 'ooo'
+  password: 'xxx'
