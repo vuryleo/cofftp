@@ -1,8 +1,15 @@
 net = require 'net'
 fs = require 'fs'
+colors = require 'colors'
+Table = require 'cli-table'
+
+colors.setTheme
+  response: 'green'
+  command: 'blue'
+  status: 'yellow'
 
 logger = (text) ->
-  console.log 'Status: ' + text
+  console.log ('Status: ' + text).status
 
 module.exports = FtpClient = (config) ->
   that = this
@@ -10,7 +17,7 @@ module.exports = FtpClient = (config) ->
   @pending = []
   @socket.on 'data', (data) ->
     data = data.toString()
-    console.log 'Reponse: ' + data
+    console.log ('Reponse: ' + data).response
     callback = that.pending[0]
     that.pending = that.pending[1:-1] || []
     if (callback)
@@ -18,7 +25,7 @@ module.exports = FtpClient = (config) ->
   this
 
 FtpClient::sendCmd = (cmd, callback) ->
-  console.log 'Commad: ' + cmd
+  console.log ('Commad: ' + cmd).command
   @pending.push callback
   @socket.write cmd + '\r\n'
 
@@ -74,14 +81,17 @@ FtpClient::exit = ->
   that.socket.end()
 
 parseListResponse = (text) ->
-  console.log 'Name\tType\tModify'
   listreg = /modify=([^;]*);perm=(.*);size=(.*);type=(.*);unique=(.*);(.*)/
+  table = new Table
+    head: ['Nmae', 'Type', 'Last Modify']
+    colWidths:  [20, 6, 20]
   for line in text.split '\r\n'
     match = listreg.exec line
     if not match
       false
     else
-      console.log match[6] + '\t' + match[4] + '\t' + match[1]
+      table.push [match[6], match[4], match[1]]
+  console.log table.toString()
 
 parsePasvAddr = (text) ->
   pasvreg = /([-\d]+,[-\d]+,[-\d]+,[-\d]+),([-\d]+),([-\d]+)/
