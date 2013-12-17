@@ -4,6 +4,8 @@
     "private": true,
     "dependencies": {
       "continuation" : "0.1.3",
-      "coffee-script" : ""
+      "coffee-script" : "1.6.3",
+      "cli-table" : "0.2.0",
+      "colors" : "0.6.2"
     }
 }
