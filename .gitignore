@@ -1,0 +1,10 @@
+/config.coffee
+node_modules
+/*.log
+
+*~
+*.swp
+
+.settings
+.project
+.DS_Store
