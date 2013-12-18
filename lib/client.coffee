@@ -19,13 +19,16 @@ module.exports = FtpClient = () ->
     data = data.toString()
     console.log ('Reponse: ' + data).response
     callback = that.pending[0]
-    that.pending = that.pending[1:-1] || []
+    that.pending = that.pending[1..that.pending.length - 1] || []
     if (callback)
       callback null, data
   this
 
 FtpClient::sendCmd = (cmd, callback) ->
-  console.log ('Commad: ' + cmd).command
+  if cmd.split(' ')[0] isnt 'PASS'
+    console.log "Commad: #{cmd}".command
+  else
+    console.log 'PASS ******'.command
   @pending.push callback
   @socket.write cmd + '\r\n'
 
@@ -52,7 +55,7 @@ FtpClient::getPasvSocket = (callback) ->
   addr =
     host: addr[0]
     port: addr[1]
-  socket = net.connect addr.port, addr.host
+  socket = net.connect addr.host, addr.port
   callback null, socket
 
 FtpClient::ls = (callback) ->
