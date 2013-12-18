@@ -23,13 +23,9 @@ FtpClient::sendCmd = (cmd, callback) ->
   @pending.push callback
   @socket.write cmd + '\r\n'
 
-FtpClient::_connect = (host, port, callback) ->
+FtpClient::connect = (host, port, callback) ->
   @pending.push callback
   @socket.connect port, host
-
-FtpClient::connect = (host, port, callback) ->
-  that = this
-  that._connect host, port, obtain res
   callback()
 
 FtpClient::login = (username, password, callback) ->
@@ -48,6 +44,10 @@ FtpClient::getPasvSocket = (callback) ->
     port: addr[1]
   logger.status "Connect to #{addr.host}:#{addr.port}"
   socket = net.connect addr.port, addr.host
+  socket.on 'connect', () ->
+    logger.status 'Data socket connected'
+  socket.on 'end', () ->
+    logger.status 'Data socket closed'
   callback null, socket
 
 FtpClient::ls = (callback) ->
@@ -55,12 +55,8 @@ FtpClient::ls = (callback) ->
   that.sendCmd 'TYPE I', obtain res
   that.sendCmd 'MLSD', obtain res
   that.getPasvSocket obtain socket
-  socket.on 'connect', () ->
-    logger.status 'Data socket connected'
   socket.on 'data', (data) ->
     callback null, parseListResponse data.toString()
-  socket.on 'end', () ->
-    logger.status 'Data socket closed'
   that.pending.push (err, res) ->
     socket.end()
 
@@ -74,9 +70,28 @@ FtpClient::pwd = (callback) ->
   that.sendCmd 'PWD', obtain res
   callback()
 
-FtpClient::exit = ->
+FtpClient::put = (name, data, callback) ->
   that = this
-  @sendCmd 'QUIT', obtain()
+  that.sendCmd 'TYPE I', obtain res
+  that.sendCmd "STOR #{name}", obtain res
+  that.getPasvSocket obtain socket
+  socket.write data, () ->
+    socket.end()
+    callback
+
+FtpClient::get = (name, callback) ->
+  that = this
+  that.sendCmd 'TYPE I', obtain res
+  that.sendCmd "RETR #{name}", obtain res
+  that.getPasvSocket obtain socket
+  socket.on 'data', (data) ->
+    callback null, data
+  that.pending.push (err, res) ->
+    socket.end()
+
+FtpClient::exit = (callback) ->
+  that = this
+  that.sendCmd 'QUIT', callback
   that.socket.end()
 
 parseListResponse = (text) ->
