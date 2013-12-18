@@ -1,6 +1,7 @@
 lineparser = require 'lineparser'
 prompt =  require 'prompt'
 readline = require 'readline'
+logger = require './logger'
 FtpClient = require './client'
 
 prompt.message = "[INPUT]".inverse
@@ -13,15 +14,26 @@ module.exports = FtpClientShell = () ->
   this
 
 FtpClientShell::cd = (r, callback) ->
-  @client.cd r.args[0], callback
+  @client.cd r[0], callback
 
 FtpClientShell::pwd = (r, callback) ->
   @client.pwd callback
 
 
 FtpClientShell::help = (r, callback) ->
-  #console.log r.help()
-  callback r.help()
+  callback null,
+"cofftp
+A Ftp written in CoffeeScript
+
+Client commands:
+  connect [host] [port]
+  login
+  ls
+  cd [directory]
+  pwd
+  upload localFile [remoteFile]
+  download remoteFile [localFile]
+"
 
 FtpClientShell::shell = () ->
   that = this
@@ -32,8 +44,11 @@ FtpClientShell::shell = () ->
 
   @repl.prompt()
   @repl.on 'line', (cmd) ->
-    that.exec cmd, obtain result
-    console.log result if result
+    try
+      that.exec cmd, obtain result
+      console.log result if result
+    catch err
+      logger.error err.message
     that.repl.prompt()
 
 FtpClientShell::login = (r, callback) ->
@@ -53,8 +68,12 @@ FtpClientShell::ls = (r, callback) ->
   @client.ls callback
 
 FtpClientShell::connect = (r, callback) ->
-  @client.connect r[0], r[1], callback
+  @client.connect r[0] || 'ftp.net9.org', r[1] || 21, callback
 
 FtpClientShell::exec = (text, callback) ->
   text = text.split ' '
-  this[text[0]] text[1..text.length - 1], callback
+  if this[text[0]] instanceof Function
+    this[text[0]] text[1..text.length - 1], callback
+  else
+    callback Error "#{text[0]} is not a avaliable command"
+

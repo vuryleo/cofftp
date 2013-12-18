@@ -1,15 +1,6 @@
 net = require 'net'
 fs = require 'fs'
-colors = require 'colors'
-Table = require 'cli-table'
-
-colors.setTheme
-  response: 'green'
-  command: 'cyan'
-  status: 'yellow'
-
-logger = (text) ->
-  console.log ('Status: ' + text).status
+logger = require './logger'
 
 module.exports = FtpClient = () ->
   that = this
@@ -17,7 +8,7 @@ module.exports = FtpClient = () ->
   @pending = []
   @socket.on 'data', (data) ->
     data = data.toString()
-    console.log ('Reponse: ' + data).response
+    logger.response data
     callback = that.pending[0]
     that.pending = that.pending[1..that.pending.length - 1] || []
     if (callback)
@@ -55,23 +46,23 @@ FtpClient::getPasvSocket = (callback) ->
   addr =
     host: addr[0]
     port: addr[1]
-  socket = net.connect addr.host, addr.port
+  logger.status "Connect to #{addr.host}:#{addr.port}"
+  socket = net.connect addr.port, addr.host
   callback null, socket
 
 FtpClient::ls = (callback) ->
   that = this
   that.sendCmd 'TYPE I', obtain res
+  that.sendCmd 'MLSD', obtain res
   that.getPasvSocket obtain socket
   socket.on 'connect', () ->
-    logger 'Data socket connected'
+    logger.status 'Data socket connected'
   socket.on 'data', (data) ->
-    parseListResponse data.toString()
+    callback null, parseListResponse data.toString()
   socket.on 'end', () ->
-    logger 'Data socket closed'
-  that.sendCmd 'MLSD', obtain res
+    logger.status 'Data socket closed'
   that.pending.push (err, res) ->
     socket.end()
-    callback()
 
 FtpClient::cd = (directory, callback) ->
   that = this
@@ -90,16 +81,15 @@ FtpClient::exit = ->
 
 parseListResponse = (text) ->
   listreg = /modify=([^;]*);perm=(.*);size=(.*);type=(.*);unique=(.*);(.*)/
-  table = new Table
-    head: ['Name', 'Type', 'Last Modify']
-    colWidths:  [20, 5, 20]
+  table = []
   for line in text.split '\r\n'
     match = listreg.exec line
-    if not match
-      false
-    else
-      table.push [match[6], match[4], match[1]]
-  console.log table.toString()
+    if line
+      if not match
+        continue
+      else
+        table.push [match[6], match[4], match[1]]
+  table
 
 parsePasvAddr = (text) ->
   pasvreg = /([-\d]+,[-\d]+,[-\d]+,[-\d]+),([-\d]+),([-\d]+)/
