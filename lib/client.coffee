@@ -29,13 +29,13 @@ FtpClient::sendCmd = (cmd, callback) ->
   @pending.push callback
   @socket.write cmd + '\r\n'
 
-FtpClient::_connect = (port, host, callback) ->
+FtpClient::_connect = (host, port, callback) ->
   @pending.push callback
   @socket.connect port, host
 
-FtpClient::connect = (port, host, callback) ->
+FtpClient::connect = (host, port, callback) ->
   that = this
-  that._connect port, host, obtain res
+  that._connect host, port, obtain res
   callback()
 
 FtpClient::login = (username, password, callback) ->

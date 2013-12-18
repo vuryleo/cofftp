@@ -8,7 +8,6 @@
       "cli-table" : "0.2.0",
       "colors" : "0.6.2",
       "lineparser" : "0.9.6",
-      "read" : "1.0.5",
-      "celeri" : "0.3.3"
+      "read" : "1.0.5"
     }
 }

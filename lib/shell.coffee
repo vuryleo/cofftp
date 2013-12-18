@@ -1,52 +1,63 @@
 lineparser = require 'lineparser'
-read = require 'read'
+prompt =  require 'prompt'
+readline = require 'readline'
 FtpClient = require './client'
 
-
+prompt.message = "[INPUT]".inverse
+prompt.delimiter = " > ".green
 
 module.exports = FtpClientShell = () ->
   that = this
+
+  @shell = () ->
+    that = this
+    @repl = readline.createInterface
+      input: process.stdin
+      output: process.stdout
+    @repl.setPrompt 'cofftp> '
+
+    @repl.prompt()
+    @repl.on 'line', (cmd) ->
+      that.exec cmd, obtain result
+      console.log result
+      that.repl.prompt()
+
+  @login = (r, callback) ->
+    that = this
+    that.repl.close()
+    prompt.get
+      properties:
+        username:
+          required: true
+        password:
+          hidden: true
+    , obtain user
+    callback null, user.username
+    that.shell()
+
+  @exec = (text, callback) ->
+    text = text.split ' '
+    switch text[0]
+      when 'login' then @login null, callback
+
   @client = new FtpClient()
-  console.log @client.senCmd
-  @meta =
-    program: 'cofftp'
-    name: 'Coffeescript Ftp Client'
-    version: '0.0.0'
-    subcommands: ['ls', 'cd', 'pwd', 'login', 'connect', 'help']
-    usages: [
-      ['ls', null, null, 'list current directory', that.ls]
-      ['cd', null, ['dest'], 'change current directory', that.cd]
-      ['pwd', null, null, 'display current directory', that.pwd]
-      ['login', null, null, 'login', that.login]
-      ['connect', null, ['host', 'port'], 'connect to ftp server', that.connect]
-      ['help', null, null, 'display help', that.help]
-      [null, null, null, 'display help', that.help]
-    ]
-  @parser = lineparser.init @meta
   this
 
-FtpClientShell::exec = (text, callback) ->
-  @parser.parse text.split ' '
-  callback()
 
-FtpClientShell::ls = (r) ->
-  @client.ls obtain()
+FtpClientShell::ls = (r, callback) ->
+  @client.ls callback
 
-FtpClientShell::cd = (r) ->
-  @client.cd r.args[0], obtain()
+FtpClientShell::cd = (r, callback) ->
+  @client.cd r.args[0], callback
 
-FtpClientShell::pwd = (r) ->
-  @client.pwd obtain()
+FtpClientShell::pwd = (r, callback) ->
+  @client.pwd callback
 
-FtpClientShell::login = (r) ->
-  read
-    prompt: 'Username: ', obtain username
-  read
-    prompt: 'Password: '
-    slient: true
-  , obtain password
-  console.log username, password
+FtpClientShell::connect = (r, callback) ->
+  @client.connect r.host, r.port, callback
 
-FtpClientShell::help = (r) ->
-  console.log r.help()
+
+FtpClientShell::help = (r, callback) ->
+  #console.log r.help()
+  callback r.help()
 
