@@ -1,11 +1,16 @@
-FtpClient = require './lib/client'
+FtpClientShell = require './lib/shell'
+prompt = require 'prompt'
 config = require './config'
 
-client = new FtpClient()
-client.connect config.port, config.host, obtain()
-client.login config.username, config.password, obtain()
-client.ls obtain()
-client.cd 'pub', obtain()
-client.ls obtain()
-client.exit()
+shell = new FtpClientShell()
+exec = (cmd, context, filename, callback) ->
+  #console.log cmd.toString()
+  callback()
+  #shell.exec cmd, callback
+
+repl.start
+  prompt: 'cofftp > '
+  input: process.stdin
+  output: process.stdout
+  eval: exec
 

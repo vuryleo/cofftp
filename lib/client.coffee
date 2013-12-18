@@ -5,13 +5,13 @@ Table = require 'cli-table'
 
 colors.setTheme
   response: 'green'
-  command: 'blue'
+  command: 'cyan'
   status: 'yellow'
 
 logger = (text) ->
   console.log ('Status: ' + text).status
 
-module.exports = FtpClient = (config) ->
+module.exports = FtpClient = () ->
   that = this
   @socket = net.Socket()
   @pending = []
@@ -75,6 +75,11 @@ FtpClient::cd = (directory, callback) ->
   that.sendCmd 'CWD ' + directory, obtain res
   callback()
 
+FtpClient::pwd = (callback) ->
+  that = this
+  that.sendCmd 'PWD', obtain res
+  callback()
+
 FtpClient::exit = ->
   that = this
   @sendCmd 'QUIT', obtain()
@@ -83,8 +88,8 @@ FtpClient::exit = ->
 parseListResponse = (text) ->
   listreg = /modify=([^;]*);perm=(.*);size=(.*);type=(.*);unique=(.*);(.*)/
   table = new Table
-    head: ['Nmae', 'Type', 'Last Modify']
-    colWidths:  [20, 6, 20]
+    head: ['Name', 'Type', 'Last Modify']
+    colWidths:  [20, 5, 20]
   for line in text.split '\r\n'
     match = listreg.exec line
     if not match

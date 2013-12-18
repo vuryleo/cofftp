@@ -6,6 +6,9 @@
       "continuation" : "0.1.3",
       "coffee-script" : "1.6.3",
       "cli-table" : "0.2.0",
-      "colors" : "0.6.2"
+      "colors" : "0.6.2",
+      "lineparser" : "0.9.6",
+      "read" : "1.0.5",
+      "celeri" : "0.3.3"
     }
 }
