@@ -56,7 +56,7 @@ FtpClient::ls = (callback) ->
   that.sendCmd 'MLSD', obtain res
   that.getPasvSocket obtain socket
   socket.on 'data', (data) ->
-    callback null, parseListResponse data.toString()
+    callback null, parseMlsdResponse data.toString()
   that.pending.push (err, res) ->
     socket.end()
 
@@ -94,7 +94,7 @@ FtpClient::exit = (callback) ->
   that.sendCmd 'QUIT', callback
   that.socket.end()
 
-parseListResponse = (text) ->
+parseMlsdResponse = (text) ->
   listreg = /modify=([^;]*);perm=(.*);size=(.*);type=(.*);unique=(.*);(.*)/
   table = []
   for line in text.split '\r\n'
